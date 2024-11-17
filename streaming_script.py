@@ -1,64 +1,82 @@
 import subprocess
 import os
-import requests
+import gdown
 
-VIDEO_FILE = "A.mp4"
+# YouTube Stream Key and Main RTMP URL
+YOUTUBE_STREAM_KEY = "6rdk-91fu-05cu-u9b3-50dk"
+YOUTUBE_RTMP_URL = f"rtmp://a.rtmp.youtube.com/live2/{YOUTUBE_STREAM_KEY}"
 
-def download_from_google_drive(drive_url):
-    """Download file from Google Drive."""
+# Backup RTMP URL
+YOUTUBE_BACKUP_RTMP_URL = "rtmp://b.rtmp.youtube.com/live2?backup=1"
+
+# File to be streamed
+VIDEO_FILE = "video.mp4"
+
+def download_google_drive_file(share_link, output_file):
+    """Download a file from Google Drive."""
     try:
-        print(f"Downloading from Google Drive URL: {drive_url}")
-        file_id = None
-
-        # Extract file ID from different types of Google Drive URLs
-        if "id=" in drive_url:
-            file_id = drive_url.split("id=")[1].split("&")[0]
-        elif "/d/" in drive_url:
-            file_id = drive_url.split("/d/")[1].split("/")[0]
-
-        if not file_id:
-            raise ValueError("Invalid Google Drive URL format")
-
-        download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
-        subprocess.run(["wget", "--no-check-certificate", "-O", VIDEO_FILE, download_url], check=True)
-        print(f"File downloaded as {VIDEO_FILE}.")
+        # Extract the file ID from the sharing link
+        file_id = share_link.split('/d/')[1].split('/view')[0]
+        # Create the download URL
+        download_url = f"https://drive.google.com/uc?id={file_id}&export=download"
+        
+        # Download the file
+        gdown.download(download_url, output_file, quiet=False)
+        print(f"Downloaded: {output_file}")
     except Exception as e:
-        print(f"Error downloading from Google Drive: {e}")
+        print(f"An error occurred: {e}")
 
-def download_direct_url(direct_url):
-    """Download file from a direct URL."""
-    try:
-        print(f"Downloading from Direct URL: {direct_url}")
-        subprocess.run(["wget", "-O", VIDEO_FILE, direct_url], check=True)
-        print(f"File downloaded as {VIDEO_FILE}.")
-    except Exception as e:
-        print(f"Error downloading from Direct URL: {e}")
-
-def download_video(url):
-    """Determine the URL type and download the file."""
-    if "drive.google.com" in url:
-        download_from_google_drive(url)
+def download_video(video_url):
+    """Download the video using wget or Google Drive."""
+    if os.path.exists(VIDEO_FILE):
+        print(f"{VIDEO_FILE} already exists. Skipping download.")
     else:
-        download_direct_url(url)
+        if "drive.google.com" in video_url:
+            print("Detected Google Drive link. Downloading...")
+            download_google_drive_file(video_url, VIDEO_FILE)
+        else:
+            print(f"Downloading video from {video_url}...")
+            subprocess.run(["wget", "-O", VIDEO_FILE, video_url], check=True)
+            print(f"Video downloaded as {VIDEO_FILE}.")
 
-def main():
-    """Main function to handle multiple URLs."""
-    urls = [
-        "https://drive.usercontent.google.com/download?id=1-ShHsQuwAqK1CaLPlaQMY2aioD4VnCnC&export=download&authuser=0&confirm=t&uuid=3d8940bf-4b92-40e0-a69a-e39d9206d3c4&at=AENtkXa9Nn5XoixfZrQCDRy95khm%3A1731827305313",  # Example Google Drive URL
-        "https://example.com/path/to/video.mp4",  # Example direct URL
+def stream_video():
+    """Stream the video using FFmpeg."""
+    ffmpeg_command = [
+        "ffmpeg",
+        "-re",  # Real-time streaming
+        "-stream_loop", "-1",  # Loop the video indefinitely
+        "-i", VIDEO_FILE,  # Input video file
+        "-vf", "scale=1080:1920",  # Resize to 9:16 aspect ratio (720x1280 for Shorts)
+        "-c:v", "libx264",
+        "-preset", "veryfast",
+        "-b:v", "3000k",
+        "-maxrate", "3000k",
+        "-bufsize", "6000k",
+        "-pix_fmt", "yuv420p",
+        "-g", "50",
+        "-c:a", "aac",
+        "-b:a", "160k",
+        "-ar", "44100",
+        "-f", "flv",  # RTMP requires FLV format
+        YOUTUBE_RTMP_URL
     ]
 
-    for url in urls:
-        if os.path.exists(VIDEO_FILE):
-            print(f"{VIDEO_FILE} already exists. Deleting the old file.")
-            os.remove(VIDEO_FILE)
-        
-        download_video(url)
+    try:
+        print("Starting stream on main RTMP URL...")
+        subprocess.run(ffmpeg_command, check=True)
+    except subprocess.CalledProcessError:
+        print("Main RTMP URL failed, switching to backup URL...")
+        ffmpeg_command[-1] = YOUTUBE_BACKUP_RTMP_URL
+        subprocess.run(ffmpeg_command)
 
-        if os.path.exists(VIDEO_FILE):
-            print(f"Successfully downloaded: {VIDEO_FILE}")
-        else:
-            print("Failed to download file. Skipping...")
+def main():
+    """Main function to download and stream the video."""
+    video_url = input("Enter the video URL (Google Drive or direct link): ")
+    
+    while True:
+        download_video(video_url)
+        stream_video()
+        print("Streaming completed. Restarting...")
 
 if __name__ == "__main__":
     main()
