@@ -48,7 +48,7 @@ def stream_video():
         "-re",  # Real-time streaming
         "-stream_loop", "-1",  # Loop the video indefinitely
         "-i", VIDEO_FILE,  # Input video file
-        "-vf", "scale=1080:1920",  # Resize to 9:16 aspect ratio
+        "-vf", "scale=1920:1080",  # Resize to 9:16 aspect ratio
         "-c:v", "libx264",
         "-preset", "veryfast",
         "-b:v", "3000k",
