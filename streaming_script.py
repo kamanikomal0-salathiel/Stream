@@ -10,10 +10,10 @@ YOUTUBE_RTMP_URL = f"rtmp://a.rtmp.youtube.com/live2/{YOUTUBE_STREAM_KEY}"
 YOUTUBE_BACKUP_RTMP_URL = "rtmp://b.rtmp.youtube.com/live2?backup=1"
 
 # File to be streamed
-VIDEO_FILE = "video.mp4"
+VIDEO_FILE = "video.webm"
 
 # Default Google Drive link
-DEFAULT_VIDEO_URL = "https://drive.google.com/file/d/1-ShHsQuwAqK1CaLPlaQMY2aioD4VnCnC/view?usp=drivesdk"
+DEFAULT_VIDEO_URL = "https://drive.google.com/file/d/1_1bINCehipSTZpKQLhbFHswtEQK5-XeC/view?usp=drivesdk"
 
 
 def download_google_drive_file(share_link, output_file):
@@ -48,7 +48,7 @@ def stream_video():
         "-re",  # Real-time streaming
         "-stream_loop", "-1",  # Loop the video indefinitely
         "-i", VIDEO_FILE,  # Input video file
-        "-vf", "scale=1920:1080",  # Resize to 9:16 aspect ratio
+        "-vf", "scale=7680:3840",  # Resize to 9:16 aspect ratio
         "-c:v", "libx264",
         "-preset", "veryfast",
         "-b:v", "3000k",
