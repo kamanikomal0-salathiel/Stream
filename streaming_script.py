@@ -44,7 +44,7 @@ def download_video(url):
 def main():
     """Main function to handle multiple URLs."""
     urls = [
-        "https://drive.google.com/uc?id=10-16FUeqej1GS2iRyLQlvHV5-XoUz5qO&export=download",  # Example Google Drive URL
+        "https://drive.usercontent.google.com/download?id=1-ShHsQuwAqK1CaLPlaQMY2aioD4VnCnC&export=download&authuser=0&confirm=t&uuid=3d8940bf-4b92-40e0-a69a-e39d9206d3c4&at=AENtkXa9Nn5XoixfZrQCDRy95khm%3A1731827305313",  # Example Google Drive URL
         "https://example.com/path/to/video.mp4",  # Example direct URL
     ]
 
