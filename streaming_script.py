@@ -1,5 +1,5 @@
-import subprocess
 import os
+import subprocess
 import gdown
 
 # YouTube Stream Key and Main RTMP URL
@@ -12,19 +12,20 @@ YOUTUBE_BACKUP_RTMP_URL = "rtmp://b.rtmp.youtube.com/live2?backup=1"
 # File to be streamed
 VIDEO_FILE = "video.mp4"
 
+# Default Google Drive link
+DEFAULT_VIDEO_URL = "https://drive.google.com/file/d/1-ShHsQuwAqK1CaLPlaQMY2aioD4VnCnC/view?usp=drivesdk"
+
+
 def download_google_drive_file(share_link, output_file):
     """Download a file from Google Drive."""
     try:
-        # Extract the file ID from the sharing link
         file_id = share_link.split('/d/')[1].split('/view')[0]
-        # Create the download URL
         download_url = f"https://drive.google.com/uc?id={file_id}&export=download"
-        
-        # Download the file
         gdown.download(download_url, output_file, quiet=False)
         print(f"Downloaded: {output_file}")
     except Exception as e:
         print(f"An error occurred: {e}")
+
 
 def download_video(video_url):
     """Download the video using wget or Google Drive."""
@@ -39,6 +40,7 @@ def download_video(video_url):
             subprocess.run(["wget", "-O", VIDEO_FILE, video_url], check=True)
             print(f"Video downloaded as {VIDEO_FILE}.")
 
+
 def stream_video():
     """Stream the video using FFmpeg."""
     ffmpeg_command = [
@@ -46,7 +48,7 @@ def stream_video():
         "-re",  # Real-time streaming
         "-stream_loop", "-1",  # Loop the video indefinitely
         "-i", VIDEO_FILE,  # Input video file
-        "-vf", "scale=1080:1920",  # Resize to 9:16 aspect ratio (720x1280 for Shorts)
+        "-vf", "scale=1080:1920",  # Resize to 9:16 aspect ratio
         "-c:v", "libx264",
         "-preset", "veryfast",
         "-b:v", "3000k",
@@ -58,7 +60,7 @@ def stream_video():
         "-b:a", "160k",
         "-ar", "44100",
         "-f", "flv",  # RTMP requires FLV format
-        YOUTUBE_RTMP_URL
+        YOUTUBE_RTMP_URL,
     ]
 
     try:
@@ -69,14 +71,17 @@ def stream_video():
         ffmpeg_command[-1] = YOUTUBE_BACKUP_RTMP_URL
         subprocess.run(ffmpeg_command)
 
+
 def main():
     """Main function to download and stream the video."""
-    video_url = input("Enter the video URL (Google Drive or direct link): ")
+    video_url = DEFAULT_VIDEO_URL  # Use the default link
+    print(f"Using default video URL: {video_url}")
     
     while True:
         download_video(video_url)
         stream_video()
         print("Streaming completed. Restarting...")
+
 
 if __name__ == "__main__":
     main()
